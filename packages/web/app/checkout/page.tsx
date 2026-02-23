@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
 import LoginModal from '@/components/LoginModal';
+import MapPicker from '@/components/MapPicker';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -20,12 +21,28 @@ export default function CheckoutPage() {
     const [addressText, setAddressText] = useState('');
     const [note, setNote] = useState('');
     const [showLogin, setShowLogin] = useState(false);
+    const [showMap, setShowMap] = useState(false);
+    const [mapCoords, setMapCoords] = useState<{ lat: number, lng: number } | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Mock distance based on random math or fixed
-    const distanceKm = mode === 'delivery' ? 2.5 : 0;
-    const deliveryFee = mode === 'delivery' ? 15 + Math.floor(distanceKm * 10) : 0; // Base 15 + 10/km
+    let distanceKm = 0;
+    let deliveryFee = 0;
+
+    if (mode === 'delivery') {
+        if (mapCoords) {
+            // Rough mock distance calculation based on coordinates (assuming store is at 13.75, 100.50)
+            const storeLat = 13.7500;
+            const storeLng = 100.5000;
+            const dLat = Math.abs(mapCoords.lat - storeLat) * 111;
+            const dLng = Math.abs(mapCoords.lng - storeLng) * 111;
+            distanceKm = parseFloat(Math.sqrt(dLat * dLat + dLng * dLng).toFixed(1));
+            deliveryFee = Math.max(10, Math.floor(distanceKm * 10));
+        } else {
+            distanceKm = 2.5;
+            deliveryFee = 15 + Math.floor(distanceKm * 10);
+        }
+    }
 
     const pointsAvailable = profile?.points || 0;
     const pointsDiscount = usePoints ? Math.floor(pointsAvailable * 0.1) : 0;
@@ -66,9 +83,10 @@ export default function CheckoutPage() {
             if (orderError) throw orderError;
 
             // 2. Create order items with options
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             const orderItemsInsert = items.map(item => ({
                 order_id: order.id,
-                menu_item_id: item.id,
+                menu_item_id: uuidRegex.test(item.id) ? item.id : null,
                 menu_item_name: item.name,
                 menu_item_emoji: item.emoji,
                 quantity: item.quantity,
@@ -194,14 +212,32 @@ export default function CheckoutPage() {
                     {/* Address Input */}
                     {mode === 'delivery' && (
                         <div style={{ border: '1px solid #EDEDED', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: 'white' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 600, fontSize: 14 }}>ที่อยู่จัดส่ง</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>ที่อยู่จัดส่ง</p>
+                                <button
+                                    onClick={() => setShowMap(true)}
+                                    style={{
+                                        background: '#FFF3DC', color: '#F5A623', border: 'none', borderRadius: 12,
+                                        padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 4
+                                    }}
+                                >
+                                    📍 ปักหมุดบนแผนที่
+                                </button>
+                            </div>
                             <textarea
                                 className="input-field"
                                 value={addressText}
                                 onChange={e => setAddressText(e.target.value)}
-                                placeholder="พิมพ์ที่อยู่จัดส่งให้ชัดเจน ระบุจุดสังเกต..."
+                                placeholder="พิมพ์ที่อยู่จัดส่งให้ชัดเจน หรือกดปักหมุดบนแผนที่..."
                                 style={{ height: 60, resize: 'none', marginBottom: 0, background: '#F9F9F9', border: 'none', padding: '10px' }}
                             />
+                            {mapCoords && (
+                                <div style={{ fontSize: 12, color: '#4A9B5E', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span>✓ พิกัด: {mapCoords.lat.toFixed(4)}, {mapCoords.lng.toFixed(4)}</span>
+                                    <span>(ระยะทาง ~{distanceKm} กม.)</span>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -235,6 +271,16 @@ export default function CheckoutPage() {
                 </button>
             </div>
             {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+            {showMap && (
+                <MapPicker
+                    onSelect={(loc) => {
+                        setMapCoords({ lat: loc.lat, lng: loc.lng });
+                        if (loc.address) setAddressText(loc.address);
+                        setShowMap(false);
+                    }}
+                    onClose={() => setShowMap(false)}
+                />
+            )}
         </>
     );
 }
