@@ -1,0 +1,9 @@
+{
+  "name": "paotang",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "web": "cd packages/web && npm run dev",
+    "mobile": "cd packages/mobile && npx expo start"
+  }
+}

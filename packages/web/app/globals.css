@@ -1,0 +1,369 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --color-primary: #F5A623;
+  --color-primary-dark: #E09010;
+  --color-primary-light: #FFF3DC;
+  --color-secondary: #FFFBF0;
+  --color-accent: #4A9B5E;
+  --color-text: #2D2D2D;
+  --color-text-light: #777;
+  --color-border: #EDEDED;
+  --color-card: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Prompt', 'Sarabun', sans-serif;
+  background: var(--color-secondary);
+  color: var(--color-text);
+  margin: 0;
+  padding: 0;
+}
+
+/* Mobile-first container */
+.app-container {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--color-secondary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Card styles */
+.card {
+  background: var(--color-card);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: white;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 0 24px;
+  z-index: 100;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px 12px;
+}
+
+.bottom-nav-item.active {
+  color: var(--color-primary);
+}
+
+.bottom-nav-center {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.5);
+  margin-top: -20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bottom-nav-center:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(245, 166, 35, 0.6);
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 32px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(245, 166, 35, 0.35);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 166, 35, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Input styles */
+.input-field {
+  background: #F8F8F8;
+  border: 1.5px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 14px;
+  color: var(--color-text);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--color-primary);
+  background: white;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-sheet {
+  background: white;
+  border-radius: 28px 28px 0 0;
+  width: 100%;
+  max-width: 430px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-center {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 380px;
+  padding: 32px 24px;
+  animation: scaleIn 0.3s ease;
+  margin: 0 auto;
+  align-self: center;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Gold Card */
+.gold-card {
+  background: linear-gradient(135deg, #F5D060, #E8A020, #C97B10);
+  border-radius: 20px;
+  padding: 24px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-card::before {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 140px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+/* Category icon */
+.category-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 64px;
+}
+
+.category-icon-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: #F5F5F5;
+  transition: all 0.2s;
+}
+
+.category-icon.active .category-icon-circle {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+}
+
+.category-icon.active {
+  color: var(--color-primary);
+}
+
+/* Menu item card */
+.menu-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: white;
+  border-radius: 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.menu-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+.menu-card-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #FFF3DC, #F5A623);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+/* Add button */
+.add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: white;
+  border: none;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.4);
+}
+
+.add-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Badge */
+.badge {
+  background: linear-gradient(135deg, #F5D060, #E8A020);
+  color: white;
+  border-radius: 50px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Carousel dots */
+.carousel-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.carousel-dot.active {
+  background: var(--color-primary);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* Map placeholder */
+.map-placeholder {
+  width: 100%;
+  height: 250px;
+  background: linear-gradient(135deg, #E8F0E8, #D0E0D0);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-lines {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Scrollbar hide */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Page padding bottom for nav */
+.page-content {
+  padding-bottom: 80px;
+}
