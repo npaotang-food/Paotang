@@ -17,7 +17,10 @@ export default function LoginModal({ onClose }: Props) {
     const [isRegister, setIsRegister] = useState(false);
 
     const handleSubmit = async () => {
-        if (!email || !password) {
+        const trimmedEmail = email.trim();
+        const trimmedPassword = password.trim();
+
+        if (!trimmedEmail || !trimmedPassword) {
             setError('กรุณากรอกอีเมลและรหัสผ่าน');
             return;
         }
@@ -26,9 +29,9 @@ export default function LoginModal({ onClose }: Props) {
 
         let result;
         if (isRegister) {
-            result = await register(email, password, name || email.split('@')[0]);
+            result = await register(trimmedEmail, trimmedPassword, name || trimmedEmail.split('@')[0]);
         } else {
-            result = await login(email, password);
+            result = await login(trimmedEmail, trimmedPassword);
         }
 
         if (result.error) {

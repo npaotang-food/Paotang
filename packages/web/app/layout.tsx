@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { OrderStatusNotifier } from "@/components/OrderStatusNotifier";
 
 export const metadata: Metadata = {
   title: "เป๋าตังค์ | ผลไม้ปอกสด ส่งถึงหน้าบ้าน",
@@ -33,6 +34,7 @@ export default function RootLayout({
             <div className="app-container">
               {children}
             </div>
+            <OrderStatusNotifier />
           </CartProvider>
         </AuthProvider>
       </body>
