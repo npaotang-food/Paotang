@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 import { uploadMenuImage, formatFileSize } from '@/utils/imageUtils';
+import { useAuth } from '@/context/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,7 @@ const EMPTY_FORM = { name: '', desc: '', price: 45, emoji: '🍊', category: 'or
 export default function AdminPage() {
     const router = useRouter();
     const supabase = createClient();
+    const { user, isLoading } = useAuth();
 
     const [tab, setTab] = useState<'menu' | 'orders'>('menu');
     const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
@@ -231,8 +233,23 @@ export default function AdminPage() {
         new Date(iso).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
     // ─── Render ───────────────────────────────────────────────────────────────────
+    if (isLoading) {
+        return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังตรวจสอบสิทธิ์...</div>;
+    }
+
+    if (!user || user.email !== 'admin@paotang.com') {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
+                <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>
+                <h2 style={{ margin: '0 0 8px' }}>ไม่มีสิทธิ์เข้าถึง</h2>
+                <p style={{ color: '#999', margin: '0 0 24px' }}>หน้านี้สงวนไว้สำหรับผู้ดูแลระบบเท่านั้น</p>
+                <button className="btn-primary" onClick={() => router.push('/')} style={{ maxWidth: 200 }}>กลับหน้าแรก</button>
+            </div>
+        );
+    }
+
     return (
-        <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: 'Kanit, sans-serif' }}>
+        <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
 
             {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #2D2D2D, #1A1A1A)', padding: '20px 20px 16px', color: 'white', position: 'sticky', top: 0, zIndex: 50 }}>
