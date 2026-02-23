@@ -3,22 +3,10 @@
 import { useCart } from '@/context/CartContext';
 import BottomNav from '@/components/BottomNav';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import MenuDetailModal from '@/components/MenuDetailModal';
-
-const ALL_MENU = [
-    { id: '1', name: 'ชาไทยซีส', desc: 'ชาไทยรสเข้มข้น เพิ่มความนัวด้วยชีส', price: 50, emoji: '🧋' },
-    { id: '2', name: 'สตอเบอร์รีลาเต้', desc: 'นมสตอเบอร์รีสดชื่น แยกชั้นสวยงาม', price: 35, emoji: '🍓' },
-    { id: '3', name: 'ชาชีสลิ้นจี่', desc: 'ชาลิ้นจี่ หอมผลไม้เมืองร้อน', price: 85, emoji: '🍵' },
-    { id: '4', name: 'พายบานอฟฟี่', desc: 'พายกล้วยหอมคาราเมล วิปครีม', price: 150, emoji: '🍰' },
-    { id: '5', name: 'มัทฉะลาเต้', desc: 'มัทฉะญี่ปุ่นแท้กับนมสด', price: 75, emoji: '🍃' },
-    { id: '6', name: 'โฮจิฉะลาเต้', desc: 'ชาโฮจิฉะคั่วหอมกับนมอุ่นๆ', price: 70, emoji: '🌾' },
-];
 
 export default function CartPage() {
-    const { items, removeItem, updateQty, total, count, clear } = useCart();
+    const { items, updateQty, total, count, clear } = useCart();
     const router = useRouter();
-    const [selectedMenu, setSelectedMenu] = useState<typeof ALL_MENU[0] | null>(null);
 
     if (count === 0) {
         return (
@@ -63,16 +51,19 @@ export default function CartPage() {
                                 <div className="menu-card-img">{item.emoji}</div>
                                 <div style={{ flex: 1 }}>
                                     <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{item.name}</p>
-                                    {item.selectedOption && (
-                                        <p style={{ margin: '2px 0', color: '#999', fontSize: 12 }}>{item.selectedOption.label}</p>
+                                    {item.options && item.options.length > 0 && (
+                                        <p style={{ margin: '2px 0 0', color: '#777', fontSize: 12 }}>{item.options.join(', ')}</p>
                                     )}
-                                    <p style={{ margin: '4px 0 0', color: '#F5A623', fontWeight: 700 }}>
-                                        ฿{(item.price + (item.selectedOption?.priceAddOn ?? 0)) * item.quantity}
+                                    {item.note && (
+                                        <p style={{ margin: '2px 0 0', color: '#F5A623', fontSize: 11 }}>📝 {item.note}</p>
+                                    )}
+                                    <p style={{ margin: '4px 0 0', color: '#FF8C42', fontWeight: 700 }}>
+                                        ฿{item.price * item.quantity}
                                     </p>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <button
-                                        onClick={() => updateQty(item.id, item.quantity - 1)}
+                                        onClick={() => updateQty(item.id, `${item.id}-${(item.options || []).sort().join('-')}-${item.note || ''}`, Math.max(0, item.quantity - 1))}
                                         style={{
                                             width: 30, height: 30, borderRadius: '50%',
                                             border: '1.5px solid #EDEDED', background: 'white',
@@ -81,7 +72,7 @@ export default function CartPage() {
                                     >−</button>
                                     <span style={{ fontWeight: 600, fontSize: 15 }}>{item.quantity}</span>
                                     <button
-                                        onClick={() => updateQty(item.id, item.quantity + 1)}
+                                        onClick={() => updateQty(item.id, `${item.id}-${(item.options || []).sort().join('-')}-${item.note || ''}`, item.quantity + 1)}
                                         style={{
                                             width: 30, height: 30, borderRadius: '50%',
                                             background: '#F5A623', border: 'none', color: 'white',

@@ -2,20 +2,21 @@
 
 import React, { createContext, useContext, useState } from 'react';
 
-interface CartItem {
+export interface CartItem {
     id: string;
     name: string;
     price: number;
     quantity: number;
     emoji: string;
-    selectedOption?: { label: string; priceAddOn: number };
+    options?: string[]; // e.g. ["พริกเกลือ", "แช่เย็นจัด"]
+    note?: string;
 }
 
 interface CartContextType {
     items: CartItem[];
     addItem: (item: CartItem) => void;
-    removeItem: (id: string) => void;
-    updateQty: (id: string, qty: number) => void;
+    removeItem: (id: string, optionsHash: string) => void;
+    updateQty: (id: string, optionsHash: string, qty: number) => void;
     total: number;
     count: number;
     clear: () => void;
@@ -23,16 +24,21 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null);
 
+// Helper to uniquely identify an item variant
+const getHash = (item: CartItem) => {
+    return `${item.id}-${(item.options || []).sort().join('-')}-${item.note || ''}`;
+};
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
 
     const addItem = (item: CartItem) => {
         setItems(prev => {
-            const key = item.id + (item.selectedOption?.label ?? '');
-            const existing = prev.find(i => i.id + (i.selectedOption?.label ?? '') === key);
+            const key = getHash(item);
+            const existing = prev.find(i => getHash(i) === key);
             if (existing) {
                 return prev.map(i =>
-                    i.id + (i.selectedOption?.label ?? '') === key
+                    getHash(i) === key
                         ? { ...i, quantity: i.quantity + item.quantity }
                         : i
                 );
@@ -41,11 +47,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    const removeItem = (id: string) => setItems(prev => prev.filter(i => i.id !== id));
-    const updateQty = (id: string, qty: number) =>
-        setItems(prev => qty <= 0 ? prev.filter(i => i.id !== id) : prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    const removeItem = (id: string, hash: string) => {
+        setItems(prev => prev.filter(i => getHash(i) !== hash));
+    };
 
-    const total = items.reduce((s, i) => s + (i.price + (i.selectedOption?.priceAddOn ?? 0)) * i.quantity, 0);
+    const updateQty = (id: string, hash: string, qty: number) => {
+        setItems(prev =>
+            qty <= 0
+                ? prev.filter(i => getHash(i) !== hash)
+                : prev.map(i => getHash(i) === hash ? { ...i, quantity: qty } : i)
+        );
+    };
+
+    const total = items.reduce((s, i) => s + (i.price * i.quantity), 0);
     const count = items.reduce((s, i) => s + i.quantity, 0);
 
     return (

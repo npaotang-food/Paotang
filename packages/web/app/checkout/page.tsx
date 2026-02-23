@@ -3,35 +3,94 @@
 import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-
-const ADDRESSES = [
-    { id: '1', label: 'บ้านพี่', detail: 'หลังสีเขียว' },
-    { id: '2', label: 'ออฟฟิศ', detail: 'ชั้น 5 อาคาร A' },
-];
+import { createClient } from '@/lib/supabase/client';
 
 export default function CheckoutPage() {
     const { items, total, count, clear } = useCart();
+    const { user, profile } = useAuth();
     const router = useRouter();
+
     const [mode, setMode] = useState<'delivery' | 'pickup'>('delivery');
     const [usePoints, setUsePoints] = useState(false);
-    const [selectedAddress, setSelectedAddress] = useState(ADDRESSES[0]);
-    const [showAddrPicker, setShowAddrPicker] = useState(false);
-    const [ordered, setOrdered] = useState(false);
 
-    const points = 1516;
-    const pointsDiscount = usePoints ? Math.floor(points * 0.1) : 0;
-    const finalTotal = Math.max(0, total - pointsDiscount);
+    // Delivery fields
+    const [addressText, setAddressText] = useState('');
+    const [note, setNote] = useState('');
 
-    const handleOrder = () => {
-        setOrdered(true);
-        setTimeout(() => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Mock distance based on random math or fixed
+    const distanceKm = mode === 'delivery' ? 2.5 : 0;
+    const deliveryFee = mode === 'delivery' ? 15 + Math.floor(distanceKm * 10) : 0; // Base 15 + 10/km
+
+    const pointsAvailable = profile?.points || 0;
+    const pointsDiscount = usePoints ? Math.floor(pointsAvailable * 0.1) : 0;
+    const finalTotal = Math.max(0, total + deliveryFee - pointsDiscount);
+
+    const supabase = createClient();
+
+    const handleOrder = async () => {
+        if (!user) {
+            alert('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ');
+            return;
+        }
+        if (mode === 'delivery' && !addressText.trim()) {
+            alert('กรุณาระบุที่อยู่จัดส่ง');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            // 1. Create order
+            const { data: order, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: user.id,
+                    total: finalTotal,
+                    delivery_fee: deliveryFee,
+                    delivery_address: mode === 'delivery' ? addressText.trim() : 'รับที่ร้าน',
+                    distance_km: distanceKm,
+                    note: note.trim() || null,
+                    use_points: usePoints,
+                    points_used: pointsDiscount > 0 ? pointsAvailable : 0,
+                    status: 'pending'
+                })
+                .select()
+                .single();
+
+            if (orderError) throw orderError;
+
+            // 2. Create order items with options
+            const orderItemsInsert = items.map(item => ({
+                order_id: order.id,
+                menu_item_id: item.id,
+                menu_item_name: item.name,
+                menu_item_emoji: item.emoji,
+                quantity: item.quantity,
+                unit_price: item.price,
+                options: item.options || []
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('order_items')
+                .insert(orderItemsInsert);
+
+            if (itemsError) throw itemsError;
+
             clear();
             router.push('/orders');
-        }, 1500);
+        } catch (error) {
+            console.error('Error submitting order', error);
+            alert('เกิดคำขอผิดพลาดในการสั่งซื้อ กรุณาลองใหม่อีกครั้ง (อย่าลืมรันโค้ด SQL Migration)');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    if (count === 0 && !ordered) {
+    if (count === 0 && !isSubmitting) {
         return (
             <>
                 <div style={{ padding: '80px 24px', textAlign: 'center' }}>
@@ -73,35 +132,6 @@ export default function CheckoutPage() {
                             </button>
                         ))}
                     </div>
-                    <button style={{
-                        background: '#F5F5F5', border: 'none', borderRadius: '50%',
-                        width: 36, height: 36, fontSize: 18, cursor: 'pointer',
-                    }}>🎯</button>
-                </div>
-
-                {/* Map */}
-                <div style={{ position: 'relative' }}>
-                    <div className="map-placeholder" style={{ borderRadius: 0 }}>
-                        <div className="map-lines" />
-                        {/* Roads simulation */}
-                        <svg width="100%" height="100%" style={{ position: 'absolute' }}>
-                            <line x1="0" y1="125" x2="100%" y2="125" stroke="#ccc" strokeWidth="12" />
-                            <line x1="215" y1="0" x2="215" y2="100%" stroke="#ccc" strokeWidth="8" />
-                            <line x1="100" y1="0" x2="80" y2="100%" stroke="#ddd" strokeWidth="6" />
-                            <line x1="0" y1="60" x2="100%" y2="80" stroke="#ddd" strokeWidth="6" />
-                        </svg>
-                        {/* Mascot/User marker */}
-                        <div style={{
-                            position: 'absolute', left: '38%', top: '38%',
-                            fontSize: 32, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))',
-                            animation: 'bounce 2s infinite',
-                        }}>🐾</div>
-                        {/* Destination marker */}
-                        <div style={{
-                            position: 'absolute', left: '55%', top: '60%',
-                            fontSize: 28, filter: 'drop-shadow(0 2px 6px rgba(245,166,35,0.6))',
-                        }}>📍</div>
-                    </div>
                 </div>
 
                 {/* Details panel */}
@@ -111,12 +141,14 @@ export default function CheckoutPage() {
                         background: '#FFFBF0', border: '1px solid #FFE5A0', borderRadius: 14,
                         padding: '14px 16px', marginBottom: 12,
                         display: 'flex', alignItems: 'center', gap: 12,
+                        opacity: pointsAvailable > 0 ? 1 : 0.5,
+                        pointerEvents: pointsAvailable > 0 ? 'auto' : 'none',
                     }}>
                         <span style={{ fontSize: 24 }}>🪙</span>
                         <div style={{ flex: 1 }}>
                             <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>ใช้คะแนนสะสมแลกส่วนลด</p>
                             <p style={{ margin: '2px 0 0', color: '#999', fontSize: 12 }}>
-                                คุณมี 1,516 คะแนน (ลดได้ ฿{Math.floor(1516 * 0.1)})
+                                คุณมี {pointsAvailable} คะแนน (ลดได้ ฿{Math.floor(pointsAvailable * 0.1)})
                             </p>
                         </div>
                         <div
@@ -139,74 +171,46 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Summary row */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                         {[
-                            { label: 'ระยะทาง', value: '0.9 กม.' },
-                            { label: 'ค่าจัดส่ง', value: '฿0', color: '#F5A623' },
-                            { label: 'ยอดรวมทั้งหมด', value: `฿${finalTotal}`, color: '#F5A623' },
+                            { label: 'ค่าอาหาร', value: `฿${total}` },
+                            { label: 'ค่าจัดส่ง', value: mode === 'delivery' ? `฿${deliveryFee}` : 'ฟรี', color: mode === 'delivery' ? '#2D2D2D' : '#4A9B5E' },
+                            { label: 'รวมทั้งหมด', value: `฿${finalTotal}`, color: '#F5A623' },
                         ].map(s => (
-                            <div key={s.label} style={{ flex: 1, textAlign: 'center' }}>
+                            <div key={s.label} style={{ flex: 1, textAlign: 'center', background: 'white', borderRadius: 12, padding: '10px 4px', border: '1px solid #F5F5F5' }}>
                                 <p style={{ margin: 0, color: '#999', fontSize: 11 }}>{s.label}</p>
-                                <p style={{ margin: '4px 0 0', fontWeight: 700, fontSize: 15, color: s.color ?? '#2D2D2D' }}>
+                                <p style={{ margin: '4px 0 0', fontWeight: 700, fontSize: 14, color: s.color ?? '#2D2D2D' }}>
                                     {s.value}
                                 </p>
                             </div>
                         ))}
                     </div>
 
-                    {/* Address picker */}
-                    <div
-                        onClick={() => setShowAddrPicker(!showAddrPicker)}
-                        style={{
-                            border: '1px solid #EDEDED', borderRadius: 14, padding: '14px 16px',
-                            marginBottom: 12, cursor: 'pointer', background: 'white',
-                            display: 'flex', alignItems: 'center', gap: 12,
-                        }}
-                    >
-                        <span style={{ fontSize: 22 }}>📍</span>
-                        <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>
-                                {selectedAddress.label} - {selectedAddress.detail}
-                            </p>
-                        </div>
-                        <span style={{ color: '#999', fontSize: 18 }}>
-                            {showAddrPicker ? '▲' : '▼'}
-                        </span>
-                    </div>
-
-                    {showAddrPicker && (
-                        <div style={{
-                            border: '1px solid #EDEDED', borderRadius: 14, overflow: 'hidden',
-                            marginBottom: 12, background: 'white',
-                        }}>
-                            {ADDRESSES.map((addr, i) => (
-                                <div
-                                    key={addr.id}
-                                    onClick={() => { setSelectedAddress(addr); setShowAddrPicker(false); }}
-                                    style={{
-                                        padding: '14px 16px',
-                                        borderBottom: i < ADDRESSES.length - 1 ? '1px solid #F5F5F5' : 'none',
-                                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
-                                        background: selectedAddress.id === addr.id ? '#FFFBF0' : 'white',
-                                    }}
-                                >
-                                    <span style={{ fontSize: 20 }}>📍</span>
-                                    <div>
-                                        <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{addr.label}</p>
-                                        <p style={{ margin: 0, color: '#999', fontSize: 12 }}>{addr.detail}</p>
-                                    </div>
-                                    {selectedAddress.id === addr.id && <span style={{ marginLeft: 'auto', color: '#F5A623' }}>✓</span>}
-                                </div>
-                            ))}
+                    {/* Address Input */}
+                    {mode === 'delivery' && (
+                        <div style={{ border: '1px solid #EDEDED', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: 'white' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 600, fontSize: 14 }}>ที่อยู่จัดส่ง</p>
+                            <textarea
+                                className="input-field"
+                                value={addressText}
+                                onChange={e => setAddressText(e.target.value)}
+                                placeholder="พิมพ์ที่อยู่จัดส่งให้ชัดเจน ระบุจุดสังเกต..."
+                                style={{ height: 60, resize: 'none', marginBottom: 0, background: '#F9F9F9', border: 'none', padding: '10px' }}
+                            />
                         </div>
                     )}
 
                     {/* Note */}
-                    <textarea
-                        className="input-field"
-                        placeholder="หมายเหตุถึงคนส่ง เช่น หลังสีเขียว..."
-                        style={{ height: 72, resize: 'none', marginBottom: 0 }}
-                    />
+                    <div style={{ border: '1px solid #EDEDED', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: 'white' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 600, fontSize: 14 }}>หมายเหตุถึงคนขับ/ร้าน</p>
+                        <textarea
+                            className="input-field"
+                            value={note}
+                            onChange={e => setNote(e.target.value)}
+                            placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                            style={{ height: 60, resize: 'none', marginBottom: 0, background: '#F9F9F9', border: 'none', padding: '10px' }}
+                        />
+                    </div>
                 </div>
             </main>
 
@@ -219,9 +223,10 @@ export default function CheckoutPage() {
                 <button
                     className="btn-primary"
                     onClick={handleOrder}
-                    style={{ background: ordered ? 'linear-gradient(135deg, #4A9B5E, #2D7A45)' : undefined }}
+                    disabled={isSubmitting}
+                    style={{ background: isSubmitting ? 'linear-gradient(135deg, #4A9B5E, #2D7A45)' : undefined }}
                 >
-                    {ordered ? '✓ สั่งซื้อแล้ว! กำลังเตรียม...' : `ยืนยันการสั่งซื้อ - ฿${finalTotal}`}
+                    {isSubmitting ? '⏳ กำลังส่งคำสั่งซื้อ...' : `ยืนยันการสั่งซื้อ - ฿${finalTotal}`}
                 </button>
             </div>
         </>

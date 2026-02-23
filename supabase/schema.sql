@@ -45,8 +45,10 @@ CREATE TABLE IF NOT EXISTS public.orders (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   address_id   UUID REFERENCES public.addresses(id) ON DELETE SET NULL,
-  total        INTEGER NOT NULL,
-  delivery_fee INTEGER NOT NULL DEFAULT 0,
+  total            INTEGER NOT NULL,
+  delivery_fee     INTEGER NOT NULL DEFAULT 0,
+  delivery_address TEXT,
+  distance_km      NUMERIC,
   status       TEXT NOT NULL DEFAULT 'pending'
                CHECK (status IN ('pending', 'preparing', 'delivering', 'done', 'cancelled')),
   note         TEXT,
@@ -62,6 +64,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
   menu_item_id         UUID REFERENCES public.menu_items(id) ON DELETE SET NULL,
   menu_item_name       TEXT NOT NULL,
   menu_item_emoji      TEXT NOT NULL DEFAULT '🍊',
+  options              JSONB DEFAULT '{}',
   quantity             INTEGER NOT NULL DEFAULT 1,
   unit_price           INTEGER NOT NULL
 );

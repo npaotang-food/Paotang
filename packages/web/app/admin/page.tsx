@@ -21,15 +21,19 @@ type MenuItem = {
     isActive: boolean;
 };
 
-type OrderItem = { name: string; qty: number; emoji: string };
+type OrderItem = { name: string; qty: number; emoji: string; options?: string[] };
 type Order = {
     id: string;
     user_id: string;
     customer: string;
+    delivery_address?: string;
+    distance_km?: number;
+    delivery_fee?: number;
     items: OrderItem[];
     total: number;
     status: 'pending' | 'preparing' | 'delivering' | 'done' | 'cancelled';
     created_at: string;
+    note?: string;
 };
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
@@ -98,9 +102,9 @@ export default function AdminPage() {
             const { data } = await supabase
                 .from('orders')
                 .select(`
-          id, user_id, total, status, created_at,
+          id, user_id, total, status, created_at, delivery_address, delivery_fee, distance_km, note,
           profiles!user_id(name),
-          order_items(menu_item_name, menu_item_emoji, quantity)
+          order_items(menu_item_name, menu_item_emoji, quantity, options)
         `)
                 .order('created_at', { ascending: false })
                 .limit(50);
@@ -111,11 +115,16 @@ export default function AdminPage() {
                     id: o.id,
                     user_id: o.user_id,
                     customer: (o.profiles?.name) ?? 'ลูกค้า',
+                    delivery_address: o.delivery_address,
+                    distance_km: o.distance_km,
+                    delivery_fee: o.delivery_fee,
+                    note: o.note,
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     items: (o.order_items ?? []).map((i: any) => ({
                         name: i.menu_item_name,
                         qty: i.quantity,
                         emoji: i.menu_item_emoji,
+                        options: i.options || [],
                     })),
                     total: o.total,
                     status: o.status as Order['status'],
@@ -335,12 +344,37 @@ export default function AdminPage() {
                                             <span style={{ fontWeight: 800, color: '#FF8C42', fontSize: 16 }}>฿{order.total}</span>
                                         </div>
 
+                                        {order.delivery_address && order.delivery_address !== 'รับที่ร้าน' && (
+                                            <div style={{ marginBottom: 10, padding: '8px 12px', background: '#F9F9F9', borderRadius: 8, fontSize: 13, borderLeft: '3px solid #F5A623' }}>
+                                                <strong>📍 จัดส่งที่:</strong> {order.delivery_address}
+                                                {order.delivery_fee! > 0 && <span style={{ color: '#F5A623', marginLeft: 8 }}>(ค่าส่ง ฿{order.delivery_fee})</span>}
+                                            </div>
+                                        )}
+                                        {order.delivery_address === 'รับที่ร้าน' && (
+                                            <div style={{ marginBottom: 10, padding: '8px 12px', background: '#E3F2FD', borderRadius: 8, fontSize: 13, borderLeft: '3px solid #2196F3' }}>
+                                                <strong>🏪 รับที่ร้าน</strong>
+                                            </div>
+                                        )}
+                                        {order.note && (
+                                            <div style={{ marginBottom: 10, color: '#FF3B30', fontSize: 13, background: '#FFF0EF', padding: '4px 8px', borderRadius: 6 }}>
+                                                📝 หมายเหตุ: {order.note}
+                                            </div>
+                                        )}
+
                                         {/* Items */}
-                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
                                             {order.items.map((item, i) => (
-                                                <span key={i} style={{ background: '#FFF3E0', borderRadius: 20, padding: '4px 10px', fontSize: 12 }}>
-                                                    {item.emoji} {item.name} ×{item.qty}
-                                                </span>
+                                                <div key={i} style={{ background: '#FFFBF0', borderRadius: 10, padding: '8px 12px', fontSize: 13, border: '1px solid #FFE5A0' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                                        <span>{item.emoji} {item.name}</span>
+                                                        <span>×{item.qty}</span>
+                                                    </div>
+                                                    {item.options && item.options.length > 0 && (
+                                                        <div style={{ color: '#777', fontSize: 12, marginTop: 4 }}>
+                                                            {item.options.join(', ')}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ))}
                                         </div>
 
