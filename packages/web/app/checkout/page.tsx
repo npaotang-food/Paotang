@@ -84,9 +84,12 @@ export default function CheckoutPage() {
 
             clear();
             router.push('/orders');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error submitting order', error);
-            alert('เกิดคำขอผิดพลาดในการสั่งซื้อ กรุณาลองใหม่อีกครั้ง (อย่าลืมรันโค้ด SQL Migration)');
+
+            // Format a detailed error message to help the user identify the issue
+            const errorMsg = error?.message || error?.details || JSON.stringify(error) || 'Unknown error';
+            alert(`เกิดข้อผิดพลาดจากฐานข้อมูล:\n${errorMsg}\n\nกรุณาตรวจสอบคอลัมน์ใหม่อีกครั้ง (delivery_address, distance_km, options)`);
         } finally {
             setIsSubmitting(false);
         }
