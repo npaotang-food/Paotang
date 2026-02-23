@@ -4,22 +4,13 @@ import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { useAuth } from '@/context/AuthContext';
 import LoginModal from '@/components/LoginModal';
-import Link from 'next/link';
 
-const MENU_ITEMS = [
-    { id: '1', name: 'ชาไทยซีส', desc: '', price: 50, emoji: '🧋', isFav: false },
-    { id: '2', name: 'สตอเบอร์รีลาเต้', desc: '', price: 35, emoji: '🍓', isFav: true },
-    { id: '3', name: 'ชาชีสลิ้นจี่', desc: '', price: 85, emoji: '🍵', isFav: false },
-    { id: '4', name: 'พายบานอฟฟี่', desc: '', price: 150, emoji: '🍰', isFav: false },
-    { id: '5', name: 'มัทฉะลาเต้', desc: '', price: 75, emoji: '🍃', isFav: false },
-    { id: '6', name: 'โฮจิฉะลาเต้', desc: '', price: 70, emoji: '🌾', isFav: true },
-];
 
 export default function ProfilePage() {
-    const { user, isLoggedIn, logout } = useAuth();
+    const { user, profile, isLoggedIn, logout } = useAuth();
     const [showLogin, setShowLogin] = useState(false);
-    const pointsToNext = 5000 - (user?.points ?? 1516);
-    const pts = user?.points ?? 1516;
+    const pointsToNext = 5000 - (profile?.points ?? 1516);
+    const pts = profile?.points ?? 1516;
 
     if (!isLoggedIn) {
         return (
@@ -57,7 +48,7 @@ export default function ProfilePage() {
                             margin: '0 auto',
                             boxShadow: '0 4px 16px rgba(245,166,35,0.4)',
                         }}>
-                            {user.initials}
+                            {profile?.initials ?? '??'}
                         </div>
                         <div style={{
                             position: 'absolute', bottom: 0, right: 0,
@@ -66,8 +57,8 @@ export default function ProfilePage() {
                             fontSize: 14, border: '2px solid white',
                         }}>📷</div>
                     </div>
-                    <h2 style={{ margin: '12px 0 4px', fontSize: 20, fontWeight: 700 }}>{user.name}</h2>
-                    <p style={{ margin: 0, color: '#999', fontSize: 13 }}>{user.email}</p>
+                    <h2 style={{ margin: '12px 0 4px', fontSize: 20, fontWeight: 700 }}>{profile?.name ?? ''}</h2>
+                    <p style={{ margin: 0, color: '#999', fontSize: 13 }}>{profile?.email ?? user?.email ?? ''}</p>
                 </div>
 
                 {/* Gold Card */}
