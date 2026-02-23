@@ -4,11 +4,13 @@ import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { useAuth } from '@/context/AuthContext';
 import LoginModal from '@/components/LoginModal';
+import { useRouter } from 'next/navigation';
 
 
 export default function ProfilePage() {
     const { user, profile, isLoggedIn, logout } = useAuth();
     const [showLogin, setShowLogin] = useState(false);
+    const router = useRouter();
     const pointsToNext = 5000 - (profile?.points ?? 1516);
     const pts = profile?.points ?? 1516;
 
@@ -100,14 +102,14 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Menu items */}
-                <div style={{ padding: '20px 16px 0' }}>
+                <div style={{ padding: '20px 16px 0', display: 'flex', flexDirection: 'column', gap: '0' }}>
                     {[
-                        { icon: '👥', label: 'แก้ไขโปรไฟล์', sub: '' },
-                        { icon: '📍', label: 'ที่อยู่การจัดส่ง', sub: 'บ้านพี่ - หลังสีเขียว' },
-                        { icon: '📋', label: 'ประวัติการสั่งซื้อ', sub: '' },
-                        { icon: '💳', label: 'วิธีการชำระเงิน', sub: '' },
+                        { icon: '👥', label: 'แก้ไขโปรไฟล์', sub: '', href: '/profile/edit' },
+                        { icon: '📍', label: 'ที่อยู่การจัดส่ง', sub: 'บ้านพี่ - หลังสีเขียว', href: '/profile/address' },
+                        { icon: '📋', label: 'ประวัติการสั่งซื้อ', sub: '', href: '/orders' },
+                        { icon: '💳', label: 'วิธีการชำระเงิน', sub: '', href: '/profile/payments' },
                     ].map((item, i) => (
-                        <div key={i} style={{
+                        <div key={i} onClick={() => router.push(item.href)} style={{
                             display: 'flex', alignItems: 'center', gap: 14,
                             padding: '16px 0',
                             borderBottom: i < 3 ? '1px solid #F5F5F5' : 'none',
@@ -123,8 +125,8 @@ export default function ProfilePage() {
                                 {item.icon}
                             </div>
                             <div style={{ flex: 1 }}>
-                                <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{item.label}</p>
-                                {item.sub && <p style={{ margin: '2px 0 0', color: '#999', fontSize: 12 }}>{item.sub}</p>}
+                                <p style={{ margin: 0, fontWeight: 600, fontSize: 14, color: '#333' }}>{item.label}</p>
+                                {item.sub && <p style={{ margin: '2px 0 0', color: '#999', fontSize: 13 }}>{item.sub}</p>}
                             </div>
                             <span style={{ color: '#CCC', fontSize: 18 }}>›</span>
                         </div>

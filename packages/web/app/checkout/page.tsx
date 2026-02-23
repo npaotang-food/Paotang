@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
+import LoginModal from '@/components/LoginModal';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -18,6 +19,7 @@ export default function CheckoutPage() {
     // Delivery fields
     const [addressText, setAddressText] = useState('');
     const [note, setNote] = useState('');
+    const [showLogin, setShowLogin] = useState(false);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,7 +35,7 @@ export default function CheckoutPage() {
 
     const handleOrder = async () => {
         if (!user) {
-            alert('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ');
+            setShowLogin(true);
             return;
         }
         if (mode === 'delivery' && !addressText.trim()) {
@@ -229,6 +231,7 @@ export default function CheckoutPage() {
                     {isSubmitting ? '⏳ กำลังส่งคำสั่งซื้อ...' : `ยืนยันการสั่งซื้อ - ฿${finalTotal}`}
                 </button>
             </div>
+            {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
         </>
     );
 }

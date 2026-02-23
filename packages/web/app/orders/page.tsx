@@ -1,22 +1,73 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { useAuth } from '@/context/AuthContext';
 import LoginModal from '@/components/LoginModal';
+import OrderReceiptModal from '@/components/OrderReceiptModal';
+import { createClient } from '@/lib/supabase/client';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: string }> = {
     pending: { label: 'รอยืนยัน', color: '#FF9500', icon: '⏳' },
     preparing: { label: 'กำลังเตรียม', color: '#007AFF', icon: '👨‍🍳' },
     delivering: { label: 'กำลังส่ง', color: '#34C759', icon: '🚴' },
     done: { label: 'สำเร็จ', color: '#8E8E93', icon: '✓' },
+    cancelled: { label: 'ยกเลิก', color: '#FF3B30', icon: '❌' },
 };
 
-export default function OrdersPage() {
-    const { isLoggedIn } = useAuth();
-    const [showLogin, setShowLogin] = useState(false);
+// Align with OrderReceiptModal typing
+interface OrderItem { name: string; qty: number; emoji: string; price: number; options: string[] }
+interface Order { id: string; date: string; status: string; items: OrderItem[]; total: number; deliveryFee: number; paymentMethod: string; address: string; distanceKm: number; }
 
-    // แสดงหน้าล็อกอิน ถ้ายังไม่ได้เข้าสู่ระบบ
+export default function OrdersPage() {
+    const { user, isLoggedIn } = useAuth();
+    const [showLogin, setShowLogin] = useState(false);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+    useEffect(() => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
+
+        const fetchOrders = async () => {
+            const supabase = createClient();
+            const { data, error } = await supabase
+                .from('orders')
+                .select(`
+                    id, total, delivery_fee, delivery_address, distance_km, status, created_at,
+                    order_items ( menu_item_name, menu_item_emoji, quantity, unit_price, options )
+                `)
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            if (data && !error) {
+                const formatted: Order[] = data.map((o: any) => ({
+                    id: o.id,
+                    date: new Date(o.created_at).toLocaleString('th-TH'),
+                    status: o.status || 'pending',
+                    total: o.total,
+                    deliveryFee: o.delivery_fee || 0,
+                    paymentMethod: 'Cash on Delivery',
+                    address: o.delivery_address || 'รับที่ร้าน',
+                    distanceKm: o.distance_km || 0,
+                    items: o.order_items ? o.order_items.map((i: any) => ({
+                        name: i.menu_item_name,
+                        emoji: i.menu_item_emoji,
+                        qty: i.quantity,
+                        price: i.unit_price,
+                        options: i.options || []
+                    })) : []
+                }));
+                setOrders(formatted);
+            }
+            setIsLoading(false);
+        };
+        fetchOrders();
+    }, [user]);
+
     if (!isLoggedIn) {
         return (
             <>
@@ -39,24 +90,20 @@ export default function OrdersPage() {
         );
     }
 
-    type OrderItem = { name: string; qty: number; emoji: string };
-    type Order = { id: string; date: string; status: string; items: OrderItem[]; total: number };
-    // TODO: fetch from Supabase
-    const orders: Order[] = [];
-
-
     return (
         <>
             <main className="page-content" style={{ padding: '0 0 80px' }}>
                 <div style={{ background: 'white', padding: '20px 16px 16px', borderBottom: '1px solid #F0F0F0' }}>
                     <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>คำสั่งซื้อ 📋</h1>
                     <p style={{ margin: '4px 0 0', color: '#999', fontSize: 13 }}>
-                        {orders.length > 0 ? `ประวัติทั้งหมด ${orders.length} รายการ` : 'ยังไม่มีประวัติการสั่งซื้อ'}
+                        {isLoading ? 'กำลังโหลดข้อมูล...' : (orders.length > 0 ? `ประวัติทั้งหมด ${orders.length} รายการ` : 'ยังไม่มีประวัติการสั่งซื้อ')}
                     </p>
                 </div>
 
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {orders.length === 0 ? (
+                    {isLoading ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>กำลังโหลดคำสั่งซื้อ... ⏳</div>
+                    ) : orders.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '60px 0' }}>
                             <div style={{ fontSize: 60, marginBottom: 12 }}>🧺</div>
                             <p style={{ color: '#999', fontSize: 14 }}>ยังไม่มีคำสั่งซื้อ</p>
@@ -64,12 +111,12 @@ export default function OrdersPage() {
                         </div>
                     ) : (
                         orders.map(order => {
-                            const st = STATUS_MAP[order.status];
+                            const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
                             return (
-                                <div key={order.id} className="card" style={{ padding: '16px', cursor: 'pointer' }}>
+                                <div key={order.id} className="card" onClick={() => setSelectedOrder(order)} style={{ padding: '16px', cursor: 'pointer', transition: 'transform 0.1s' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                         <div>
-                                            <span style={{ fontWeight: 700, fontSize: 14 }}>{order.id}</span>
+                                            <span style={{ fontWeight: 700, fontSize: 14 }}>#{order.id.slice(0, 8)}...</span>
                                             <span style={{ color: '#999', fontSize: 12, marginLeft: 8 }}>{order.date}</span>
                                         </div>
                                         <span style={{
@@ -95,7 +142,7 @@ export default function OrdersPage() {
                                             padding: '6px 16px', color: '#F5A623', fontWeight: 600,
                                             fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
                                         }}>
-                                            สั่งซ้ำ
+                                            ดูรายละเอียด
                                         </button>
                                     </div>
                                 </div>
@@ -104,6 +151,14 @@ export default function OrdersPage() {
                     )}
                 </div>
             </main>
+
+            {selectedOrder && (
+                <OrderReceiptModal
+                    order={selectedOrder}
+                    onClose={() => setSelectedOrder(null)}
+                />
+            )}
+
             <BottomNav />
         </>
     );

@@ -31,6 +31,21 @@ const getHash = (item: CartItem) => {
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    React.useEffect(() => {
+        const saved = localStorage.getItem('paotang_cart');
+        if (saved) {
+            try { setItems(JSON.parse(saved)); } catch (e) { console.error('Failed to parse cart', e); }
+        }
+        setIsLoaded(true);
+    }, []);
+
+    React.useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem('paotang_cart', JSON.stringify(items));
+        }
+    }, [items, isLoaded]);
 
     const addItem = (item: CartItem) => {
         setItems(prev => {
