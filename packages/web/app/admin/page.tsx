@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
+import { uploadMenuImage, formatFileSize } from '@/utils/imageUtils';
 
 const INITIAL_MENU = [
     { id: '1', name: 'ส้มสายน้ำผึ้ง', desc: 'หวานฉ่ำ ไม่มีเม็ด เต็มกล่อง', price: 45, image: '/menu/som-sainumpeung.jpg', emoji: '🍊', category: 'orange', isActive: true },
@@ -27,6 +28,13 @@ export default function AdminPage() {
     const [showForm, setShowForm] = useState(false);
     const [tab, setTab] = useState<'menu' | 'orders'>('menu');
     const [saved, setSaved] = useState(false);
+    // Image upload state
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadPreview, setUploadPreview] = useState<string | null>(null);
+    const [uploadOrigSize, setUploadOrigSize] = useState(0);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Mock order data for admin view
     const ORDERS = [
@@ -43,10 +51,39 @@ export default function AdminPage() {
         done: { label: 'สำเร็จ', color: '#8E8E93' },
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadFile(file);
+        setUploadOrigSize(file.size);
+        setUploadError('');
+        const reader = new FileReader();
+        reader.onload = ev => setUploadPreview(ev.target?.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleUploadImage = async () => {
+        if (!uploadFile || !editItem) return;
+        setUploading(true);
+        setUploadError('');
+        try {
+            const { url } = await uploadMenuImage(uploadFile, 'menu');
+            setEditItem(prev => prev ? { ...prev, image: url } : null);
+            setUploadPreview(null);
+            setUploadFile(null);
+        } catch (err: unknown) {
+            setUploadError(err instanceof Error ? err.message : 'Upload failed');
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const handleSave = (item: MenuItem) => {
         setMenu(prev => prev.map(m => m.id === item.id ? item : m));
         setEditItem(null);
         setShowForm(false);
+        setUploadFile(null);
+        setUploadPreview(null);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };
@@ -220,8 +257,57 @@ export default function AdminPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     zIndex: 200, padding: 20,
                 }}>
-                    <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 440 }}>
+                    <div style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto' }}>
                         <h2 style={{ margin: '0 0 20px', fontSize: 18 }}>✏️ แก้ไข {editItem.name}</h2>
+
+                        {/* Current image + upload */}
+                        <div style={{ marginBottom: 18 }}>
+                            <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#555' }}>📸 รูปเมนู</label>
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                {/* Current */}
+                                <div style={{ position: 'relative', width: 80, height: 80, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#FFF3E0' }}>
+                                    <Image src={uploadPreview ?? editItem.image} alt={editItem.name} fill style={{ objectFit: 'cover' }} sizes="80px" />
+                                    {uploadPreview && (
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(52,199,89,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>✅</div>
+                                    )}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    {/* File picker */}
+                                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        style={{
+                                            width: '100%', padding: '8px 12px', borderRadius: 8,
+                                            border: '1.5px dashed #EDEDED', background: '#FAFAFA',
+                                            cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, color: '#555',
+                                        }}
+                                    >
+                                        📂 เลือกรูปใหม่
+                                    </button>
+                                    {uploadFile && (
+                                        <div style={{ marginTop: 6, fontSize: 11, color: '#777' }}>
+                                            <p style={{ margin: '0 0 2px' }}>📄 {uploadFile.name}</p>
+                                            <p style={{ margin: '0 0 6px', color: '#999' }}>ขนาดเดิม: {formatFileSize(uploadOrigSize)} → จะลดเหลือ ~{formatFileSize(uploadOrigSize * 0.35)} (JPEG 75%)</p>
+                                            <button
+                                                onClick={handleUploadImage}
+                                                disabled={uploading}
+                                                style={{
+                                                    padding: '6px 16px', borderRadius: 8, border: 'none',
+                                                    background: uploading ? '#CCC' : '#34C759',
+                                                    color: 'white', cursor: uploading ? 'not-allowed' : 'pointer',
+                                                    fontFamily: 'inherit', fontSize: 12, fontWeight: 700,
+                                                }}
+                                            >
+                                                {uploading ? '⏳ กำลังอัพโหลด...' : '☁️ อัพโหลดไป Supabase'}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {uploadError && <p style={{ margin: '6px 0 0', color: '#FF3B30', fontSize: 11 }}>❌ {uploadError}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Text fields */}
                         {[
                             { label: 'ชื่อเมนู', key: 'name', type: 'text' },
                             { label: 'รายละเอียด', key: 'desc', type: 'text' },
@@ -246,7 +332,7 @@ export default function AdminPage() {
                         ))}
                         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                             <button
-                                onClick={() => { setShowForm(false); setEditItem(null); }}
+                                onClick={() => { setShowForm(false); setEditItem(null); setUploadFile(null); setUploadPreview(null); }}
                                 style={{
                                     flex: 1, padding: 12, border: '1.5px solid #EDEDED', borderRadius: 10,
                                     background: 'white', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14,
