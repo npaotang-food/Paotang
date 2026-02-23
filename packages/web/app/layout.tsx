@@ -22,8 +22,8 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Itim — cute rounded handwritten Thai font matching product label style */}
-        <link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet" />
+        {/* Kanit — clean modern Thai font */}
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         <meta name="theme-color" content="#FF8C42" />
       </head>
