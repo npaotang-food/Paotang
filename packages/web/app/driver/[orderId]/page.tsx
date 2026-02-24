@@ -10,6 +10,7 @@ interface OrderInfo {
     dest_lat: number;
     dest_lng: number;
     customer: string;
+    customerPhone?: string;
 }
 
 export default function DriverPage() {
@@ -22,21 +23,23 @@ export default function DriverPage() {
     const [error, setError] = useState<string | null>(null);
     const [watchId, setWatchId] = useState<number | null>(null);
 
-    // Fetch order info
+    // Fetch order info + customer phone
     useEffect(() => {
         const load = async () => {
             const { data } = await supabase
                 .from('orders')
-                .select('id, delivery_address, delivery_lat, delivery_lng, user_id')
+                .select('id, delivery_address, delivery_lat, delivery_lng, user_id, profiles!inner(full_name, phone)')
                 .eq('id', orderId)
                 .single();
             if (data) {
+                const prof = data.profiles as unknown as { full_name?: string; phone?: string };
                 setOrder({
                     id: data.id,
                     delivery_address: data.delivery_address || 'ที่อยู่ลูกค้า',
                     dest_lat: data.delivery_lat || 13.7563,
                     dest_lng: data.delivery_lng || 100.5018,
-                    customer: data.user_id?.slice(0, 8) || '...',
+                    customer: prof?.full_name || data.user_id?.slice(0, 8) || '...',
+                    customerPhone: prof?.phone || undefined,
                 });
             }
         };
@@ -99,8 +102,24 @@ export default function DriverPage() {
             {order && (
                 <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 380 }}>
                     <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 4 }}>ออเดอร์ #{order.id.slice(0, 8)}</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>📍 {order.delivery_address}</div>
-                    <div style={{ fontSize: 12, opacity: 0.5 }}>ลูกค้า: {order.customer}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>📍 {order.delivery_address}</div>
+                    <div style={{ fontSize: 13, opacity: 0.7, marginBottom: order.customerPhone ? 12 : 0 }}>ลูกค้า: {order.customer}</div>
+
+                    {/* Call button */}
+                    {order.customerPhone && (
+                        <a
+                            href={`tel:${order.customerPhone}`}
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                background: 'linear-gradient(135deg, #34C759, #248A3D)',
+                                color: 'white', borderRadius: 12, padding: '12px 16px',
+                                textDecoration: 'none', fontWeight: 700, fontSize: 16,
+                                boxShadow: '0 4px 16px rgba(52,199,89,0.4)',
+                            }}
+                        >
+                            ☎️ โทร {order.customerPhone}
+                        </a>
+                    )}
                 </div>
             )}
 

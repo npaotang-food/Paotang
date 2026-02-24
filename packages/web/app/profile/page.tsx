@@ -62,7 +62,19 @@ export default function ProfilePage() {
                         }}>📷</div>
                     </div>
                     <h2 style={{ margin: '12px 0 4px', fontSize: 20, fontWeight: 700 }}>{profile?.name ?? ''}</h2>
-                    <p style={{ margin: 0, color: '#999', fontSize: 13 }}>{profile?.email ?? user?.email ?? ''}</p>
+                    <p style={{ margin: 0, color: '#999', fontSize: 13 }}>
+                        @{(user?.email ?? '').replace('@paotang.app', '')}
+                    </p>
+                    {profile?.phone ? (
+                        <p style={{ margin: '4px 0 0', color: '#4A9B5E', fontSize: 13, fontWeight: 600 }}>📞 {profile.phone}</p>
+                    ) : (
+                        <button
+                            onClick={() => router.push('/profile/edit')}
+                            style={{ background: 'none', border: 'none', color: '#F5A623', fontSize: 12, cursor: 'pointer', marginTop: 4, fontFamily: 'inherit' }}
+                        >
+                            + เพิ่มเบอร์โทร
+                        </button>
+                    )}
                 </div>
 
                 {/* Gold Card */}

@@ -1,13 +1,35 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import BottomNav from '@/components/BottomNav';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CartPage() {
     const { items, updateQty, total, count, clear } = useCart();
+    const { user, profile } = useAuth();
     const router = useRouter();
+    const supabase = createClient();
+
+    const [phone, setPhone] = useState('');
+    const [phoneSaving, setPhoneSaving] = useState(false);
+
+    // Pre-fill phone from profile
+    useEffect(() => {
+        if (profile && (profile as { phone?: string }).phone) {
+            setPhone((profile as { phone?: string }).phone ?? '');
+        }
+    }, [profile]);
+
+    const savePhone = async () => {
+        if (!user || !phone.trim()) return;
+        setPhoneSaving(true);
+        await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id);
+        setPhoneSaving(false);
+    };
 
     if (count === 0) {
         return (
@@ -33,7 +55,7 @@ export default function CartPage() {
 
     return (
         <>
-            <main className="page-content" style={{ padding: '0 0 120px' }}>
+            <main className="page-content" style={{ padding: '0 0 140px' }}>
                 {/* Header */}
                 <div style={{
                     background: 'white', padding: '20px 16px 16px',
@@ -52,10 +74,9 @@ export default function CartPage() {
 
                 <div style={{ padding: '16px' }}>
                     {/* Cart items */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
                         {items.map((item, i) => (
                             <div key={i} className="menu-card" style={{ cursor: 'default' }}>
-                                {/* Product thumbnail: real image or emoji fallback */}
                                 <div className="menu-card-img" style={{ position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
                                     {item.image ? (
                                         <Image
@@ -104,6 +125,44 @@ export default function CartPage() {
                         ))}
                     </div>
 
+                    {/* Phone number field */}
+                    <div className="card" style={{ padding: '14px 16px', marginBottom: 12 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>
+                            📞 เบอร์โทรติดต่อลูกค้า
+                        </label>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            <input
+                                type="tel"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                                onBlur={savePhone}
+                                placeholder="0812345678"
+                                style={{
+                                    flex: 1, padding: '10px 12px',
+                                    border: '1.5px solid #EBEBEB', borderRadius: 10,
+                                    fontFamily: 'Prompt, sans-serif', fontSize: 14,
+                                    outline: 'none', background: '#FAFAFA',
+                                }}
+                            />
+                            <button
+                                onClick={savePhone}
+                                disabled={phoneSaving || !phone.trim()}
+                                style={{
+                                    padding: '0 14px', borderRadius: 10,
+                                    background: phone.trim() ? '#F5A623' : '#EEE',
+                                    border: 'none', color: phone.trim() ? 'white' : '#AAA',
+                                    fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                                    fontFamily: 'Prompt, sans-serif', whiteSpace: 'nowrap',
+                                }}
+                            >
+                                {phoneSaving ? '...' : 'บันทึก'}
+                            </button>
+                        </div>
+                        <p style={{ margin: '6px 0 0', fontSize: 11, color: '#AAA' }}>
+                            คนขับจะใช้เบอร์นี้ติดต่อคุณ
+                        </p>
+                    </div>
+
                     {/* Order summary */}
                     <div className="card" style={{ padding: '16px' }}>
                         <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700 }}>สรุปคำสั่งซื้อ</h3>
@@ -123,16 +182,18 @@ export default function CartPage() {
                 </div>
             </main>
 
-            {/* Checkout button */}
+            {/* Checkout button — maxWidth 680 matches page-content on desktop */}
             <div style={{
                 position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-                width: '100%', maxWidth: 430, background: 'white',
+                width: '100%', maxWidth: 680, background: 'white',
                 borderTop: '1px solid #F0F0F0', padding: '12px 16px 28px', zIndex: 100,
             }}>
                 <button className="btn-primary" onClick={() => router.push('/checkout')}>
                     ดำเนินการสั่งซื้อ - ฿{total}
                 </button>
             </div>
+
+            <BottomNav />
         </>
     );
 }
