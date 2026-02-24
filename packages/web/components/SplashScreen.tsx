@@ -13,8 +13,8 @@ export default function SplashScreen() {
         sessionStorage.setItem('splash_shown', '1');
 
         const showTimer = setTimeout(() => setPhase('visible'), 0);
-        const hideTimer = setTimeout(() => setPhase('hiding'), 1800);
-        const goneTimer = setTimeout(() => setPhase('gone'), 2400);
+        const hideTimer = setTimeout(() => setPhase('hiding'), 3300);
+        const goneTimer = setTimeout(() => setPhase('gone'), 3900);
         return () => { clearTimeout(showTimer); clearTimeout(hideTimer); clearTimeout(goneTimer); };
     }, []);
 
