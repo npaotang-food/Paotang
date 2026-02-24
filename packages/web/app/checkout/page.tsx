@@ -30,10 +30,14 @@ export default function CheckoutPage() {
 
     // Delivery fields
     const [addressText, setAddressText] = useState('');
+    const [pinLabel, setPinLabel] = useState('');           // e.g. "บ้าน", "ที่ทำงาน"
     const [note, setNote] = useState('');
     const [showLogin, setShowLogin] = useState(false);
     const [showMap, setShowMap] = useState(false);
-    const [mapCoords, setMapCoords] = useState<{ lat: number, lng: number } | null>(null);
+    const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [savedAddressId, setSavedAddressId] = useState<string | null>(null);
+    const [showReusePopup, setShowReusePopup] = useState(false);
+    const [savedAddressSnap, setSavedAddressSnap] = useState<{ label: string; detail: string; lat: number; lng: number } | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -50,24 +54,35 @@ export default function CheckoutPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Pre-fill saved default address when user is logged in
+    // Load saved default address and show reuse popup
     useEffect(() => {
         if (!user) return;
         const loadSavedAddress = async () => {
             const { data } = await supabase
                 .from('addresses')
-                .select('label, lat, lng')
+                .select('id, label, detail, lat, lng')
                 .eq('user_id', user.id)
                 .eq('is_default', true)
                 .single();
-            if (data) {
-                if (data.label) setAddressText(data.label);
-                if (data.lat && data.lng) setMapCoords({ lat: data.lat, lng: data.lng });
+            if (data?.label) {
+                setSavedAddressId(data.id);
+                setSavedAddressSnap({ label: data.label, detail: data.detail || '', lat: data.lat, lng: data.lng });
+                setShowReusePopup(true);
             }
         };
         loadSavedAddress();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user]);
+
+    const applyReuseAddress = (snap: typeof savedAddressSnap) => {
+        if (!snap) return;
+        setAddressText(snap.label);
+        setPinLabel(snap.detail);
+        if (snap.lat && snap.lng) setMapCoords({ lat: snap.lat, lng: snap.lng });
+        setShowReusePopup(false);
+    };
+
+
 
     let distanceKm = 0;
     let deliveryFee = 0;
@@ -146,14 +161,32 @@ export default function CheckoutPage() {
 
             if (itemsError) throw itemsError;
 
+            // 3. Auto-save/update pin to addresses table
+            if (mode === 'delivery' && mapCoords && addressText.trim()) {
+                const addrPayload = {
+                    user_id: user.id,
+                    label: addressText.trim(),
+                    detail: pinLabel.trim(),
+                    lat: mapCoords.lat,
+                    lng: mapCoords.lng,
+                    is_default: true,
+                };
+                if (savedAddressId) {
+                    await supabase.from('addresses').update(addrPayload).eq('id', savedAddressId);
+                } else {
+                    // Unset other defaults first
+                    await supabase.from('addresses').update({ is_default: false }).eq('user_id', user.id);
+                    await supabase.from('addresses').insert(addrPayload);
+                }
+            }
+
             clear();
             router.push('/orders');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error submitting order', error);
-
-            // Format a detailed error message to help the user identify the issue
-            const errorMsg = error?.message || error?.details || JSON.stringify(error) || 'Unknown error';
-            alert(`เกิดข้อผิดพลาดจากฐานข้อมูล:\n${errorMsg}\n\nกรุณาตรวจสอบคอลัมน์ใหม่อีกครั้ง (delivery_address, distance_km, options)`);
+            const e = error as { message?: string; details?: string };
+            const errorMsg = e?.message || e?.details || JSON.stringify(error) || 'Unknown error';
+            alert(`เกิดข้อผิดพลาดจากฐานข้อมูล:\n${errorMsg}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -282,10 +315,22 @@ export default function CheckoutPage() {
                                 value={addressText}
                                 onChange={e => setAddressText(e.target.value)}
                                 placeholder="พิมพ์ที่อยู่จัดส่งให้ชัดเจน หรือกดปักหมุดบนแผนที่..."
-                                style={{ height: 60, resize: 'none', marginBottom: 0, background: '#F9F9F9', border: 'none', padding: '10px' }}
+                                style={{ height: 60, resize: 'none', marginBottom: 8, background: '#F9F9F9', border: 'none', padding: '10px' }}
+                            />
+                            {/* Pin label input */}
+                            <input
+                                type="text"
+                                value={pinLabel}
+                                onChange={e => setPinLabel(e.target.value)}
+                                placeholder="ชื่อหมุด (ไม่บังคับ) เช่น 'บ้าน', 'ที่ทำงาน', 'บ้านแม่'"
+                                style={{
+                                    width: '100%', padding: '8px 10px', border: '1px solid #EDEDED',
+                                    borderRadius: 8, fontFamily: 'inherit', fontSize: 13, background: '#F9F9F9',
+                                    marginBottom: mapCoords ? 8 : 0,
+                                }}
                             />
                             {mapCoords && (
-                                <div style={{ fontSize: 12, color: '#4A9B5E', marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                <div style={{ fontSize: 12, color: '#4A9B5E', display: 'flex', alignItems: 'center', gap: 4 }}>
                                     <span>✓ พิกัด: {mapCoords.lat.toFixed(4)}, {mapCoords.lng.toFixed(4)}</span>
                                     <span>(ระยะทาง ~{distanceKm} กม.)</span>
                                 </div>
@@ -336,6 +381,59 @@ export default function CheckoutPage() {
                     }}
                     onClose={() => setShowMap(false)}
                 />
+            )}
+            {/* Reuse last address popup */}
+            {showReusePopup && savedAddressSnap && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+                    animation: 'fadeIn 0.2s',
+                }}>
+                    <div style={{
+                        background: 'white', borderRadius: 24, padding: 24, width: '100%', maxWidth: 380,
+                        animation: 'slideInUp 0.3s ease',
+                    }}>
+                        <div style={{ fontSize: 36, textAlign: 'center', marginBottom: 12 }}>📍</div>
+                        <h3 style={{ margin: '0 0 6px', textAlign: 'center', fontSize: 17, fontWeight: 700 }}>
+                            ใช้ที่อยู่ล่าสุดไหมครับ?
+                        </h3>
+                        <div style={{
+                            background: '#F9F9F9', borderRadius: 12, padding: '12px 14px', marginBottom: 20,
+                            border: '1px solid #EDEDED',
+                        }}>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: 13 }}>📍 {savedAddressSnap.label}</p>
+                            {savedAddressSnap.detail && (
+                                <p style={{ margin: '4px 0 0', color: '#777', fontSize: 12 }}>{savedAddressSnap.detail}</p>
+                            )}
+                            {savedAddressSnap.lat && (
+                                <p style={{ margin: '4px 0 0', color: '#4A9B5E', fontSize: 11 }}>
+                                    ✓ มีพิกัดแผนที่บันทึกไว้
+                                </p>
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                            <button
+                                onClick={() => setShowReusePopup(false)}
+                                style={{
+                                    flex: 1, padding: '12px', borderRadius: 14, border: '1.5px solid #EDEDED',
+                                    background: 'white', fontFamily: 'inherit', fontSize: 14, cursor: 'pointer', color: '#555'
+                                }}
+                            >
+                                เปลี่ยนที่อยู่
+                            </button>
+                            <button
+                                onClick={() => applyReuseAddress(savedAddressSnap)}
+                                style={{
+                                    flex: 2, padding: '12px', borderRadius: 14, border: 'none',
+                                    background: 'linear-gradient(135deg, #F5A623, #E09010)',
+                                    color: 'white', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer'
+                                }}
+                            >
+                                ✓ ใช้ที่อยู่นี้
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );
