@@ -17,14 +17,16 @@ export default function ProfilePage() {
     if (!isLoggedIn) {
         return (
             <>
-                <div style={{ padding: '80px 24px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 80, marginBottom: 16 }}>🐾</div>
-                    <h2 style={{ margin: '0 0 8px', color: '#2D2D2D' }}>เข้าสู่ระบบก่อนนะ!</h2>
-                    <p style={{ color: '#999', marginBottom: 24 }}>เพื่อดูข้อมูลโปรไฟล์และคะแนนสะสม</p>
-                    <button className="btn-primary" onClick={() => setShowLogin(true)} style={{ maxWidth: 280 }}>
-                        เข้าสู่ระบบ / สมัครสมาชิก
-                    </button>
-                </div>
+                <main className="page-content">
+                    <div className="empty-state" style={{ minHeight: '70vh' }}>
+                        <span className="empty-state-icon">👤</span>
+                        <p className="empty-state-title">เข้าสู่ระบบก่อนนะครับ</p>
+                        <p className="empty-state-subtitle">เพื่อดูข้อมูลโปรไฟล์และคะแนนสะสม</p>
+                        <button className="btn-primary" onClick={() => setShowLogin(true)} style={{ maxWidth: 260 }}>
+                            เข้าสู่ระบบ / สมัครสมาชิก
+                        </button>
+                    </div>
+                </main>
                 {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
                 <BottomNav />
             </>

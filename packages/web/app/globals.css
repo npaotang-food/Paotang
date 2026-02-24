@@ -57,11 +57,15 @@ body {
     padding-left: var(--sidebar-width);
   }
 
+  /* Main content column — centered phone-like column on desktop */
   .page-content {
     flex: 1;
-    max-width: var(--content-max);
-    margin: 0 auto;
-    padding: 0 32px 80px !important;
+    max-width: 680px !important;
+    margin: 0 auto !important;
+    padding: 0 0 80px !important;
+    background: var(--color-secondary);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+    min-height: 100vh;
   }
 
   .bottom-nav {
