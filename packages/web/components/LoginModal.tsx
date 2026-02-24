@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 interface Props {
     onClose: () => void;
@@ -70,13 +71,12 @@ export default function LoginModal({ onClose }: Props) {
                 <div style={{ textAlign: 'center', marginBottom: 20 }}>
                     <div style={{
                         width: 72, height: 72,
-                        background: 'linear-gradient(135deg, #FFF3DC, #F5A623)',
                         borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 36, margin: '0 auto 12px',
+                        overflow: 'hidden',
+                        margin: '0 auto 12px',
                         boxShadow: '0 4px 16px rgba(245,166,35,0.3)',
                     }}>
-                        🥭
+                        <Image src="/logo.jpg" alt="เป๋าตังค์" width={72} height={72} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                     </div>
                     <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#F5A623' }}>
                         {isRegister ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}

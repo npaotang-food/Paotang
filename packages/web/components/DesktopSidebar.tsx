@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 const NAV_LINKS = [
     { href: '/', label: 'หน้าหลัก', emoji: '🏠' },
@@ -25,7 +26,9 @@ export default function DesktopSidebar() {
         <aside className="desktop-sidebar">
             {/* Logo */}
             <div className="sidebar-logo" onClick={() => router.push('/')}>
-                <div className="sidebar-logo-icon">🧺</div>
+                <div className="sidebar-logo-icon" style={{ overflow: 'hidden', borderRadius: '50%', flexShrink: 0 }}>
+                    <Image src="/logo.jpg" alt="เป๋าตังค์" width={44} height={44} style={{ objectFit: 'cover', display: 'block', borderRadius: '50%' }} />
+                </div>
                 <div>
                     <div className="sidebar-logo-name">เป๋าตังค์</div>
                     <div className="sidebar-logo-sub">ผลไม้ปอกสด</div>
