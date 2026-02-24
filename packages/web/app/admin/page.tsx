@@ -67,7 +67,7 @@ const EMPTY_FORM = { name: '', desc: '', price: 45, emoji: '🍊', category: 'or
 export default function AdminPage() {
     const router = useRouter();
     const supabase = createClient();
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, isAdmin } = useAuth();
 
     const [tab, setTab] = useState<'menu' | 'orders'>('menu');
     const [menu, setMenu] = useState<MenuItem[]>(INITIAL_MENU);
@@ -237,7 +237,7 @@ export default function AdminPage() {
         return <div style={{ minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังตรวจสอบสิทธิ์...</div>;
     }
 
-    if (!user || user.email !== 'admin@paotang.app') {
+    if (!user || !isAdmin) {
         return (
             <div style={{ minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
                 <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>

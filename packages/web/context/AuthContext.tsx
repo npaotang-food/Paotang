@@ -9,6 +9,7 @@ interface Profile {
     name: string;
     email: string;
     phone?: string;
+    is_admin?: boolean;
     points: number;
     tier: 'Silver' | 'Gold' | 'Platinum';
     initials: string;
@@ -19,6 +20,7 @@ interface AuthContextType {
     profile: Profile | null;
     session: Session | null;
     isLoggedIn: boolean;
+    isAdmin: boolean;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<{ error: string | null }>;
     register: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
@@ -103,7 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={{
-            user, profile, session, isLoggedIn: !!user, isLoading,
+            user, profile, session,
+            isLoggedIn: !!user,
+            isAdmin: !!profile?.is_admin,
+            isLoading,
             login, register, logout,
         }}>
             {children}

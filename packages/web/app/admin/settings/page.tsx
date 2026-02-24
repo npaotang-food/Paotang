@@ -19,7 +19,7 @@ interface StoreSettings {
 }
 
 export default function AdminSettingsPage() {
-    const { user, profile } = useAuth();
+    const { user, isAdmin } = useAuth();
     const router = useRouter();
     const supabase = createClient();
 
@@ -33,7 +33,7 @@ export default function AdminSettingsPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             if (!user) return;
-            const { data, error } = await supabase.from('store_settings').select('*').single();
+            const { data } = await supabase.from('store_settings').select('*').single();
             if (data) setSettings(data);
             setIsLoading(false);
         };
@@ -65,7 +65,7 @@ export default function AdminSettingsPage() {
 
     if (isLoading) return <div style={{ minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังโหลด...</div>;
 
-    if (!user || user.email !== 'admin@paotang.app') {
+    if (!user || !isAdmin) {
         return (
             <div style={{ minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
                 <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>
