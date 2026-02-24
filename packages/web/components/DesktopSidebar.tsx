@@ -19,7 +19,7 @@ export default function DesktopSidebar() {
     const { count } = useCart();
     const { isLoggedIn, profile, user } = useAuth();
 
-    const isAdmin = user?.email === 'admin@paotang.com';
+    const isAdmin = user?.email === 'admin@paotang.app';
 
     return (
         <aside className="desktop-sidebar">

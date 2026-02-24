@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
     }, [user, supabase]);
 
     if (isLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt,sans-serif' }}>⏳ กำลังโหลด...</div>;
-    if (!user || user.email !== 'admin@paotang.com') {
+    if (!user || user.email !== 'admin@paotang.app') {
         return (
             <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt,sans-serif' }}>
                 <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>
