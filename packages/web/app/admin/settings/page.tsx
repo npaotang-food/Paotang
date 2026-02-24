@@ -63,11 +63,11 @@ export default function AdminSettingsPage() {
         }
     };
 
-    if (isLoading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังโหลด...</div>;
+    if (isLoading) return <div style={{ minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังโหลด...</div>;
 
     if (!user || user.email !== 'admin@paotang.app') {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
+            <div style={{ minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
                 <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>
                 <h2 style={{ margin: '0 0 8px' }}>ไม่มีสิทธิ์เข้าถึง</h2>
                 <button className="btn-primary" onClick={() => router.push('/')} style={{ maxWidth: 200, marginTop: 16 }}>กลับหน้าแรก</button>
@@ -78,7 +78,7 @@ export default function AdminSettingsPage() {
     if (!settings) return <div style={{ padding: 20 }}>ไม่พบข้อมูลการตั้งค่าร้านค้า (กรุณารัน SQL Migration ก่อน)</div>;
 
     return (
-        <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
+        <div style={{ minHeight: '100vh', width: '100%', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
             {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #2D2D2D, #1A1A1A)', padding: '20px 20px 16px', color: 'white', position: 'sticky', top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>

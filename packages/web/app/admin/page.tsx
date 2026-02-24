@@ -234,12 +234,12 @@ export default function AdminPage() {
 
     // ─── Render ───────────────────────────────────────────────────────────────────
     if (isLoading) {
-        return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังตรวจสอบสิทธิ์...</div>;
+        return <div style={{ minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>⏳ กำลังตรวจสอบสิทธิ์...</div>;
     }
 
     if (!user || user.email !== 'admin@paotang.app') {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
+            <div style={{ minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'Prompt, sans-serif' }}>
                 <div style={{ fontSize: 60, marginBottom: 16 }}>🚫</div>
                 <h2 style={{ margin: '0 0 8px' }}>ไม่มีสิทธิ์เข้าถึง</h2>
                 <p style={{ color: '#999', margin: '0 0 24px' }}>หน้านี้สงวนไว้สำหรับผู้ดูแลระบบเท่านั้น</p>
@@ -249,7 +249,7 @@ export default function AdminPage() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
+        <div style={{ minHeight: '100vh', width: '100%', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
 
             <div style={{ background: 'linear-gradient(135deg, #2D2D2D, #1A1A1A)', padding: '20px 20px 16px', color: 'white', position: 'sticky', top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
