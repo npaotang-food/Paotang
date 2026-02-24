@@ -2,6 +2,7 @@
 
 import { useCart } from '@/context/CartContext';
 import BottomNav from '@/components/BottomNav';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
@@ -54,7 +55,20 @@ export default function CartPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
                         {items.map((item, i) => (
                             <div key={i} className="menu-card" style={{ cursor: 'default' }}>
-                                <div className="menu-card-img">{item.emoji}</div>
+                                {/* Product thumbnail: real image or emoji fallback */}
+                                <div className="menu-card-img" style={{ position: 'relative', flexShrink: 0, overflow: 'hidden' }}>
+                                    {item.image ? (
+                                        <Image
+                                            src={item.image}
+                                            alt={item.name}
+                                            fill
+                                            style={{ objectFit: 'cover', borderRadius: 10 }}
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <span style={{ fontSize: 32 }}>{item.emoji}</span>
+                                    )}
+                                </div>
                                 <div style={{ flex: 1 }}>
                                     <p style={{ margin: 0, fontWeight: 600, fontSize: 14 }}>{item.name}</p>
                                     {item.options && item.options.length > 0 && (

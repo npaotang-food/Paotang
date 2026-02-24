@@ -8,7 +8,8 @@ export interface CartItem {
     price: number;
     quantity: number;
     emoji: string;
-    options?: string[]; // e.g. ["พริกเกลือ", "แช่เย็นจัด"]
+    image?: string;        // path to product photo e.g. /menu/som-sainumpeung.jpg
+    options?: string[];   // e.g. ["พริกเกลือ", "แช่เย็นจัด"]
     note?: string;
 }
 

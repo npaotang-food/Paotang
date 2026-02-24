@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 
 interface MenuItem {
@@ -9,6 +10,7 @@ interface MenuItem {
     desc: string;
     price: number;
     emoji: string;
+    image?: string;       // e.g. /menu/som-sainumpeung.jpg
     category?: string;
 }
 
@@ -44,6 +46,7 @@ export default function MenuDetailModal({ item, onClose }: Props) {
             price: item.price,
             quantity: qty,
             emoji: item.emoji,
+            image: item.image,   // ← pass the image to cart
             options,
             note: note.trim() || undefined,
         });
@@ -58,20 +61,44 @@ export default function MenuDetailModal({ item, onClose }: Props) {
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ paddingBottom: 0 }}>
-                {/* Image header */}
+                {/* Cover: product image or emoji fallback */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #2D7A45, #4A9B5E)',
                     borderRadius: '28px 28px 0 0',
-                    padding: '40px 20px 24px',
-                    textAlign: 'center',
+                    height: 220,
                     position: 'relative',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, #2D7A45, #4A9B5E)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
+                    {item.image ? (
+                        <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            style={{ objectFit: 'cover' }}
+                            unoptimized
+                        />
+                    ) : (
+                        <span style={{ fontSize: 90, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' }}>{item.emoji}</span>
+                    )}
+                    {/* Gradient overlay for readability */}
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, transparent 50%, rgba(0,0,0,0.15) 100%)',
+                    }} />
                     <button onClick={onClose} style={{
-                        position: 'absolute', top: 16, right: 16,
-                        background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
+                        position: 'absolute', top: 16, right: 16, zIndex: 10,
+                        background: 'rgba(0,0,0,0.35)', border: 'none', borderRadius: '50%',
                         width: 36, height: 36, fontSize: 18, cursor: 'pointer', color: 'white',
+                        backdropFilter: 'blur(4px)',
                     }}>✕</button>
-                    <div style={{ fontSize: 80 }}>{item.emoji}</div>
+                    {/* Emoji badge over image */}
+                    {item.image && (
+                        <span style={{
+                            position: 'absolute', bottom: 12, left: 16, zIndex: 10,
+                            fontSize: 28, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))'
+                        }}>{item.emoji}</span>
+                    )}
                 </div>
 
                 {/* Info */}
