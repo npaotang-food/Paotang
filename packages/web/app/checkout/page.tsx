@@ -50,6 +50,25 @@ export default function CheckoutPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Pre-fill saved default address when user is logged in
+    useEffect(() => {
+        if (!user) return;
+        const loadSavedAddress = async () => {
+            const { data } = await supabase
+                .from('addresses')
+                .select('label, lat, lng')
+                .eq('user_id', user.id)
+                .eq('is_default', true)
+                .single();
+            if (data) {
+                if (data.label) setAddressText(data.label);
+                if (data.lat && data.lng) setMapCoords({ lat: data.lat, lng: data.lng });
+            }
+        };
+        loadSavedAddress();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
     let distanceKm = 0;
     let deliveryFee = 0;
     let deliveryMessage = '';
