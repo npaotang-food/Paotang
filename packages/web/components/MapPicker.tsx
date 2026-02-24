@@ -63,12 +63,36 @@ export default function MapPicker({ initialLat = 13.7563, initialLng = 100.5018,
             maxZoom: 19,
         }).addTo(map);
 
-        // Add Store Marker if provided
         if (storeLat && storeLng) {
             const storeIcon = L.divIcon({
-                className: 'custom-store-pin',
-                html: `<div style="font-size: 32px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); transform: translate(-10px, -30px)">🏪</div>`,
-                iconSize: [32, 32],
+                className: '',
+                html: `
+                    <div style="
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        transform: translate(-24px, -58px);
+                        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+                    ">
+                        <div style="
+                            width: 48px;
+                            height: 48px;
+                            border-radius: 50%;
+                            background-image: url('/logo.jpg');
+                            background-size: cover;
+                            background-position: center;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+                        "></div>
+                        <div style="
+                            width: 0; height: 0;
+                            border-left: 7px solid transparent;
+                            border-right: 7px solid transparent;
+                            border-top: 10px solid white;
+                            margin-top: -2px;
+                        "></div>
+                    </div>`,
+                iconSize: [48, 68],
             });
             L.marker([storeLat, storeLng], { icon: storeIcon }).addTo(map);
         }
