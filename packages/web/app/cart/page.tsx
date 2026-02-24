@@ -38,7 +38,8 @@ export default function CartPage() {
         if (error) {
             alert('ไม่สามารถบันทึกเบอร์ได้: ' + error.message);
         } else {
-            // Optional: show a small success indication or just let the button change state
+            alert('บันทึกเบอร์โทรเรียบร้อยแล้ว');
+            router.push('/checkout');
         }
     };
 
