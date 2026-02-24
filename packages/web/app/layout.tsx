@@ -5,6 +5,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { OrderStatusNotifier } from "@/components/OrderStatusNotifier";
 import DesktopSidebar from "@/components/DesktopSidebar";
+import SplashScreen from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
   title: "เป๋าตังค์ | ผลไม้ปอกสด ส่งถึงหน้าบ้าน",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#FF8C42" />
       </head>
       <body>
+        <SplashScreen />
         <AuthProvider>
           <CartProvider>
             {/* Desktop Sidebar — hidden on mobile via CSS */}
