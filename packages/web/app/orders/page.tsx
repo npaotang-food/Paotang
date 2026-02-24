@@ -7,12 +7,12 @@ import LoginModal from '@/components/LoginModal';
 import OrderReceiptModal from '@/components/OrderReceiptModal';
 import { createClient } from '@/lib/supabase/client';
 
-const STATUS_MAP: Record<string, { label: string; color: string; icon: string }> = {
-    pending: { label: 'รอยืนยัน', color: '#FF9500', icon: '⏳' },
-    preparing: { label: 'กำลังเตรียม', color: '#007AFF', icon: '👨‍🍳' },
-    delivering: { label: 'กำลังส่ง', color: '#34C759', icon: '🚴' },
-    done: { label: 'สำเร็จ', color: '#8E8E93', icon: '✓' },
-    cancelled: { label: 'ยกเลิก', color: '#FF3B30', icon: '❌' },
+const STATUS_MAP: Record<string, { label: string; icon: string }> = {
+    pending: { label: 'รอยืนยัน', icon: '⏳' },
+    preparing: { label: 'กำลังเตรียม', icon: '👨‍🍳' },
+    delivering: { label: 'กำลังส่ง', icon: '🛵' },
+    done: { label: 'สำเร็จ', icon: '✅' },
+    cancelled: { label: 'ยกเลิก', icon: '✕' },
 };
 
 // Align with OrderReceiptModal typing
@@ -104,10 +104,10 @@ export default function OrdersPage() {
                     {isLoading ? (
                         <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>กำลังโหลดคำสั่งซื้อ... ⏳</div>
                     ) : orders.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                            <div style={{ fontSize: 60, marginBottom: 12 }}>🧺</div>
-                            <p style={{ color: '#999', fontSize: 14 }}>ยังไม่มีคำสั่งซื้อ</p>
-                            <p style={{ color: '#BBB', fontSize: 12 }}>เริ่มสั่งผลไม้ปอกอร่อยๆ ได้เลย!</p>
+                        <div className="empty-state">
+                            <span className="empty-state-icon">📋</span>
+                            <p className="empty-state-title">ยังไม่มีคำสั่งซื้อ</p>
+                            <p className="empty-state-subtitle">สั่งผลไม้ปอกสด อร่อยๆ เป็นออเดอร์แรกได้เลย! 🍊</p>
                         </div>
                     ) : (
                         orders.map(order => {
@@ -119,10 +119,7 @@ export default function OrdersPage() {
                                             <span style={{ fontWeight: 700, fontSize: 14 }}>#{order.id.slice(0, 8)}...</span>
                                             <span style={{ color: '#999', fontSize: 12, marginLeft: 8 }}>{order.date}</span>
                                         </div>
-                                        <span style={{
-                                            background: st.color + '20', color: st.color,
-                                            borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 600,
-                                        }}>
+                                        <span className={`status-badge ${order.status}`}>
                                             {st.icon} {st.label}
                                         </span>
                                     </div>

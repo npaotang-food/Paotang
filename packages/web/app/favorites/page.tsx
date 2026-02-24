@@ -26,11 +26,11 @@ export default function FavoritesPage() {
                     <div style={{ background: 'white', padding: '20px 16px 16px', borderBottom: '1px solid #F0F0F0' }}>
                         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>รายการที่ชอบ ❤️</h1>
                     </div>
-                    <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-                        <div style={{ fontSize: 70, marginBottom: 16 }}>❤️</div>
-                        <h2 style={{ margin: '0 0 8px', color: '#2D2D2D', fontSize: 18 }}>เข้าสู่ระบบก่อนนะ!</h2>
-                        <p style={{ color: '#999', marginBottom: 24, fontSize: 14 }}>เพื่อบันทึกเมนูโปรดของคุณ</p>
-                        <button className="btn-primary" onClick={() => setShowLogin(true)} style={{ maxWidth: 240, margin: '0 auto' }}>
+                    <div className="empty-state">
+                        <span className="empty-state-icon">🔐</span>
+                        <p className="empty-state-title">เข้าสู่ระบบก่อนนะ!</p>
+                        <p className="empty-state-subtitle">เพื่อบันทึกเมนูโปรดของคุณ<br />และดูได้ทุกครั้งที่ต้องการ 💛</p>
+                        <button className="btn-primary" onClick={() => setShowLogin(true)} style={{ maxWidth: 220, margin: '0 auto' }}>
                             เข้าสู่ระบบ / สมัครสมาชิก
                         </button>
                     </div>

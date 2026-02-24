@@ -251,7 +251,6 @@ export default function AdminPage() {
     return (
         <div style={{ minHeight: '100vh', background: '#F8F8F8', fontFamily: 'Prompt, sans-serif' }}>
 
-            {/* Header */}
             <div style={{ background: 'linear-gradient(135deg, #2D2D2D, #1A1A1A)', padding: '20px 20px 16px', color: 'white', position: 'sticky', top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <button onClick={() => router.push('/')} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>← กลับ</button>
@@ -260,6 +259,8 @@ export default function AdminPage() {
                         <p style={{ margin: 0, fontSize: 12, opacity: 0.7 }}>เป๋าตังค์ — จัดการร้านค้า</p>
                     </div>
                     {saved && <span style={{ background: '#34C759', borderRadius: 20, padding: '4px 14px', fontSize: 12, fontWeight: 600, color: 'white' }}>✓ บันทึกแล้ว</span>}
+                    <button onClick={() => router.push('/admin/dashboard')} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>📊 Dashboard</button>
+                    <button onClick={() => router.push('/admin/settings')} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'white', cursor: 'pointer', fontFamily: 'inherit' }}>⚙️ ตั้งค่า</button>
                 </div>
             </div>
 
@@ -397,7 +398,7 @@ export default function AdminPage() {
 
                                         {/* Status action buttons */}
                                         {nexts.length > 0 && (
-                                            <div style={{ display: 'flex', gap: 8 }}>
+                                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                                 {nexts.map(n => (
                                                     <button
                                                         key={n.status}
@@ -414,6 +415,24 @@ export default function AdminPage() {
                                                         {isUpdating ? '⏳...' : n.label}
                                                     </button>
                                                 ))}
+                                                {/* Driver link — visible when delivering */}
+                                                {(order.status === 'delivering' || order.status === 'preparing') && order.delivery_address !== 'รับที่ร้าน' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const url = `${window.location.origin}/driver/${order.id}`;
+                                                            navigator.clipboard.writeText(url).catch(() => { });
+                                                            window.open(url, '_blank');
+                                                        }}
+                                                        style={{
+                                                            padding: '8px 16px', borderRadius: 10, border: '1.5px solid #34A853',
+                                                            background: 'transparent', color: '#34A853',
+                                                            cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700,
+                                                            display: 'flex', alignItems: 'center', gap: 6,
+                                                        }}
+                                                    >
+                                                        🛵 ลิงก์คนส่ง
+                                                    </button>
+                                                )}
                                             </div>
                                         )}
                                     </div>

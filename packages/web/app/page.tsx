@@ -155,7 +155,7 @@ export default function HomePage() {
             </h2>
             <span style={{ color: '#999', fontSize: 12 }}>{filtered.length} รายการ</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, paddingBottom: 12 }}>
+          <div className="menu-grid" style={{ paddingBottom: 12 }}>
             {filtered.map(item => (
               <div
                 key={item.id}

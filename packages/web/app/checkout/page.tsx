@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BottomNav from '@/components/BottomNav';
 import LoginModal from '@/components/LoginModal';
 import MapPicker from '@/components/MapPicker';
@@ -8,6 +8,17 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+
+interface StoreSettings {
+    store_lat: number;
+    store_lng: number;
+    free_delivery_km: number;
+    flat_fee_start_km: number;
+    flat_fee_end_km: number;
+    flat_fee_amount: number;
+    base_delivery_fee: number;
+    per_km_fee: number;
+}
 
 export default function CheckoutPage() {
     const { items, total, count, clear } = useCart();
@@ -26,29 +37,45 @@ export default function CheckoutPage() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Store Settings
+    const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const { data } = await supabase.from('store_settings').select('*').single();
+            if (data) setStoreSettings(data);
+        };
+        fetchSettings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     let distanceKm = 0;
     let deliveryFee = 0;
+    let deliveryMessage = '';
 
-    if (mode === 'delivery') {
+    if (mode === 'delivery' && storeSettings) {
         if (mapCoords) {
-            // Rough mock distance calculation based on coordinates (assuming store is at 13.75, 100.50)
-            const storeLat = 13.7500;
-            const storeLng = 100.5000;
-            const dLat = Math.abs(mapCoords.lat - storeLat) * 111;
-            const dLng = Math.abs(mapCoords.lng - storeLng) * 111;
+            // Rough mock distance calculation based on coordinates
+            const dLat = Math.abs(mapCoords.lat - storeSettings.store_lat) * 111;
+            const dLng = Math.abs(mapCoords.lng - storeSettings.store_lng) * 111;
             distanceKm = parseFloat(Math.sqrt(dLat * dLat + dLng * dLng).toFixed(1));
-            deliveryFee = Math.max(10, Math.floor(distanceKm * 10));
-        } else {
-            distanceKm = 2.5;
-            deliveryFee = 15 + Math.floor(distanceKm * 10);
+
+            // Apply Rules
+            if (distanceKm <= storeSettings.free_delivery_km) {
+                deliveryFee = 0;
+            } else if (distanceKm > storeSettings.flat_fee_start_km && distanceKm <= storeSettings.flat_fee_end_km) {
+                deliveryFee = storeSettings.flat_fee_amount;
+            } else {
+                deliveryFee = storeSettings.base_delivery_fee + Math.floor(distanceKm * storeSettings.per_km_fee);
+            }
         }
+        deliveryMessage = `ส่งฟรี ${storeSettings.free_delivery_km} กม. | เหมา ${storeSettings.flat_fee_start_km}-${storeSettings.flat_fee_end_km} กม. ${storeSettings.flat_fee_amount}บ.`;
     }
 
     const pointsAvailable = profile?.points || 0;
     const pointsDiscount = usePoints ? Math.floor(pointsAvailable * 0.1) : 0;
     const finalTotal = Math.max(0, total + deliveryFee - pointsDiscount);
-
-    const supabase = createClient();
 
     const handleOrder = async () => {
         if (!user) {
@@ -209,6 +236,12 @@ export default function CheckoutPage() {
                         ))}
                     </div>
 
+                    {mode === 'delivery' && deliveryMessage && (
+                        <div style={{ background: '#F0F9FF', padding: '10px 14px', borderRadius: 12, marginBottom: 16, fontSize: 13, color: '#007AFF', textAlign: 'center' }}>
+                            🚙 <b>เงื่อนไขค่าส่ง:</b> {deliveryMessage}
+                        </div>
+                    )}
+
                     {/* Address Input */}
                     {mode === 'delivery' && (
                         <div style={{ border: '1px solid #EDEDED', borderRadius: 14, padding: '14px 16px', marginBottom: 12, background: 'white' }}>
@@ -273,6 +306,10 @@ export default function CheckoutPage() {
             {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
             {showMap && (
                 <MapPicker
+                    initialLat={storeSettings?.store_lat}
+                    initialLng={storeSettings?.store_lng}
+                    storeLat={storeSettings?.store_lat}
+                    storeLng={storeSettings?.store_lng}
                     onSelect={(loc) => {
                         setMapCoords({ lat: loc.lat, lng: loc.lng });
                         if (loc.address) setAddressText(loc.address);

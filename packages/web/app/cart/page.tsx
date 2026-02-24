@@ -11,14 +11,20 @@ export default function CartPage() {
     if (count === 0) {
         return (
             <>
-                <div style={{ padding: '80px 24px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 80, marginBottom: 16 }}>🛒</div>
-                    <h2 style={{ margin: '0 0 8px' }}>ตะกร้าว่างเปล่า</h2>
-                    <p style={{ color: '#999', marginBottom: 24 }}>เพิ่มเมนูที่ชอบก่อนเลย!</p>
-                    <button className="btn-primary" onClick={() => router.push('/')} style={{ maxWidth: 240 }}>
-                        เลือกเมนู
-                    </button>
-                </div>
+                <main className="page-content" style={{ minHeight: '100vh' }}>
+                    <div style={{ background: 'white', padding: '20px 16px 16px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <button onClick={() => router.back()} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer' }}>←</button>
+                        <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, flex: 1 }}>ตะกร้าสินค้า</h1>
+                    </div>
+                    <div className="empty-state">
+                        <span className="empty-state-icon">🛒</span>
+                        <p className="empty-state-title">ตะกร้าว่างเปล่า</p>
+                        <p className="empty-state-subtitle">เลือกผลไม้ปอกสดที่ชอบ<br />แล้วเพิ่มลงตะกร้าได้เลย!</p>
+                        <button className="btn-primary" onClick={() => router.push('/')} style={{ maxWidth: 220 }}>
+                            🍊 เลือกเมนู
+                        </button>
+                    </div>
+                </main>
                 <BottomNav />
             </>
         );

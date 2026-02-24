@@ -11,11 +11,13 @@ interface Location {
 interface MapPickerProps {
     initialLat?: number;
     initialLng?: number;
+    storeLat?: number;
+    storeLng?: number;
     onSelect: (location: Location) => void;
     onClose: () => void;
 }
 
-export default function MapPicker({ initialLat = 13.7563, initialLng = 100.5018, onSelect, onClose }: MapPickerProps) {
+export default function MapPicker({ initialLat = 13.7563, initialLng = 100.5018, storeLat, storeLng, onSelect, onClose }: MapPickerProps) {
     const mapRef = useRef<HTMLDivElement>(null);
     const [isMapLoaded, setIsMapLoaded] = useState(false);
     const [center, setCenter] = useState({ lat: initialLat, lng: initialLng });
@@ -60,6 +62,16 @@ export default function MapPicker({ initialLat = 13.7563, initialLng = 100.5018,
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
         }).addTo(map);
+
+        // Add Store Marker if provided
+        if (storeLat && storeLng) {
+            const storeIcon = L.divIcon({
+                className: 'custom-store-pin',
+                html: `<div style="font-size: 32px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); transform: translate(-10px, -30px)">🏪</div>`,
+                iconSize: [32, 32],
+            });
+            L.marker([storeLat, storeLng], { icon: storeIcon }).addTo(map);
+        }
 
         // Fetch initial address
         fetchAddress(initialLat, initialLng);

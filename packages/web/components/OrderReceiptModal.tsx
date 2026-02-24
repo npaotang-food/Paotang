@@ -157,8 +157,8 @@ export default function OrderReceiptModal({ order, onClose }: Props) {
                 <DeliveryMap
                     destLat={13.7563} // Mock coordinates for UI showcase
                     destLng={100.5018}
-                    driverLat={13.7663}
-                    driverLng={100.5118}
+                    storeLat={13.7500}
+                    storeLng={100.5000}
                     addressLabel={order.address}
                     onClose={() => setShowMap(false)}
                 />

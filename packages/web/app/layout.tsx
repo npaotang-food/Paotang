@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { OrderStatusNotifier } from "@/components/OrderStatusNotifier";
+import DesktopSidebar from "@/components/DesktopSidebar";
 
 export const metadata: Metadata = {
   title: "เป๋าตังค์ | ผลไม้ปอกสด ส่งถึงหน้าบ้าน",
@@ -24,8 +25,7 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* Prompt — soft, geometric, modern Thai font matching the reference design */}
-        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
         {/* Leaflet CSS for Delivery Map */}
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossOrigin="" />
@@ -36,6 +36,8 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <CartProvider>
+            {/* Desktop Sidebar — hidden on mobile via CSS */}
+            <DesktopSidebar />
             <div className="app-container">
               {children}
             </div>
@@ -49,3 +51,4 @@ export default function RootLayout({
     </html>
   );
 }
+
