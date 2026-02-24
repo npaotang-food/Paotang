@@ -25,10 +25,21 @@ export default function CartPage() {
     }, [profile]);
 
     const savePhone = async () => {
-        if (!user || !phone.trim()) return;
+        if (!user) {
+            alert('กรุณาเข้าสู่ระบบก่อนบันทึกเบอร์โทร');
+            return;
+        }
+        if (!phone.trim()) return;
+
         setPhoneSaving(true);
-        await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id);
+        const { error } = await supabase.from('profiles').update({ phone: phone.trim() }).eq('id', user.id);
         setPhoneSaving(false);
+
+        if (error) {
+            alert('ไม่สามารถบันทึกเบอร์ได้: ' + error.message);
+        } else {
+            // Optional: show a small success indication or just let the button change state
+        }
     };
 
     if (count === 0) {
@@ -145,7 +156,8 @@ export default function CartPage() {
                                 }}
                             />
                             <button
-                                onClick={savePhone}
+                                onClick={(e) => { e.preventDefault(); savePhone(); }}
+                                onTouchEnd={(e) => { e.preventDefault(); savePhone(); }}
                                 disabled={phoneSaving || !phone.trim()}
                                 style={{
                                     padding: '0 14px', borderRadius: 10,
